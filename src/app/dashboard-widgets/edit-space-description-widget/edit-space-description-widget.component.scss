@@ -2,10 +2,11 @@
 
 .edit-space-description-widget {
     max-height: 245px;
+    h2 {
+      text-transform: capitalize;
+    }
     .space-description {
-        overflow-y: scroll;
-        max-height: 122px;
-        border: 1px solid transparent;
+        margin:rem(10) 0;
     }
     p[contenteditable="true"] {
         &:hover {
