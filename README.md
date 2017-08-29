@@ -1,26 +1,26 @@
 # fabric8-ui
 
 [![Build Status](https://ci.centos.org/buildStatus/icon?job=devtools-fabric8-ui-npm-publish-build-master)](https://ci.centos.org/job/devtools-fabric8-ui-npm-publish-build-master)
+[![codecov](https://codecov.io/gh/fabric8io/fabric8-ui/branch/master/graph/badge.svg)](https://codecov.io/gh/fabric8io/fabric8-ui)
 
-## Before you start
+## Before you start: Pointing to a cluster
 
-### Backend API
+You need to setup your shell to point to the right cluster so that it can talk to the required back end services like KeyCloak, WIT, Forge, OpenShift etc.  
 
-Make sure you set the URL to the services. For UI development, we recommend connecting to the dev environment API server. 
+We provide various sample environments out of the box which make it easier to get started. They are all located as bash scripts in `environments`.  
 
-To connect to the dev environment instances: 
-* `export FABRIC8_WIT_API_URL="http://api.prod-preview.openshift.io/api/"`
-* `export FABRIC8_RECOMMENDER_API_URL="http://api-bayesian.dev.rdu2c.fabric8.io/api/v1/"`
-* `export FABRIC8_FORGE_API_URL="https://forge.api.prod-preview.openshift.io"`
-* `export FABRIC8_REALM="fabric8"`
+The default one you should use when you want to develop on the console is to reuse openshift.io production cluster:
 
-> NOTE: if running against local api (set by FABRIC8_WIT_API_URL="http://localhost:8080/api/") and FABRIC8_REALM="fabric8-test"
+```bash
+source environments/openshift-prod-cluster.sh
+```
 
-to your `.bash_profile` and reload the shell.
+There are others too. For example if you want to try [run fabric8 locally on minishift](https://github.com/fabric8io/fabric8-platform#v-4x-pre-release-development) and connect fabric8-ui to it then try:
 
-#### Note: When adding new environment variables for new api's that are needed in the code:
-You will need to update  /config/webpack.[dev|prod|...].js in order for the correct values to be picked up in the webpack build process.
- 
+```bash
+source environments/local-cluster.sh
+```
+
 
 ## VS Code
 
@@ -32,56 +32,26 @@ Run `npm install`. This will download all the required dependencies to be able t
 
 ## To start
 
-Run `npm start`. This will start the UI with livereload enabled. Then navigate to <http://localhost:3000>.
+Run `npm start`. This will start the UI with live reload enabled. Then navigate to <http://localhost:3000>.
 
-### Proxying
+## HTML, CSS and Less
+| [Code Guidelines](https://fabric8-ui.github.io/fabric8-ux/code-guidelines)
 
-We also have built in support for proxying your requests to the OpenShift cluster - this is particularly
-useful if your OpenShift cluster doesn't support CORS. By default the console will access the proxy on the
-same protocl, host and port as the app is running. You can adjust this using environment variables, and the
-sample environments provide good examples of doing this.
+fabric8-ui uses HTML5 elements where appropriate, and practices
+**practicality over purity**. Use the least amount of markup with the fewest intricacies as possible.
 
-#### Sample environments
+Attribution order, syntax definitions and declaration order are an important aspect of the fabric8-ui code and should be followed according the the guidelines.
 
-We provide various sample environments out of the box which make it easier to get started.
-The environments are provided as bash scripts in `environments`. To use them run:
+fabric8-ui uses Less for it's stylesheets. If you find yourself wanting to create a shared style that multiple components will
+use, then we recommend adding it to an existing `.less` file in the `src/assets/stylesheets/shared/` directory. Only update these styles if you are making a truly global style, and are going to synchronize your changes across all of the various UI projects.
 
-```bash
-source environments/<environment-name>.sh
-```
+If you only want to make a change to a specific component, do so in that component's `.less` file, according to Angular best practices.
 
-For example, to connect to devshift:
-
-```bash
-source environments/devshift-cluster.sh
-```
-
-## CSS and SASS
-
-fabric8-planner uses SASS for it's stylesheets. It also uses the Angular emulation
-of the shadow dom, so you will normally want to place your styles in the
-`.component.scss` file next to the html and the typescript.
-
-If you find yourself wanting to create a shared style that multiple components will
-use, then we recommend adding it as a mixin to
-`src/assets/stylesheets/_planner-mixins.scss`. The mixins are imported in to every
-`.component.scss` file. You can then create a real class by doing something like
-
-    .my-class {
-      @include my-class;
-    }
-
-We use mixins to avoid polluting components with uncessary style classes, and to avoid
-an explosion of shared files.
-
-The `src/assets/stylesheets/` directory includes a `shared` directory. These are
-shared global styles that we will refactor out in to a shared library at some point.
-Only update these styles if you are making a truly global style, and are going to
-synchronise your changes across all the various UI projects.
+The file `osio.less` is imported into every component Less file using `@import (reference)`, so all files inside of the `/shared` directory will be used by each component.
 
 ## Integrations
 
-fabric8-ui uses rxjs to provide loose coupling between modules (both those in the code base and those integrated via NPM). 
+fabric8-ui uses rxjs to provide loose coupling between modules (both those in the code base and those integrated via NPM).
 To do this, fabric8-ui makes extensive use of the [Broadcaster](https://github.com/fabric8-ui/ngx-base/blob/master/src/app/broadcaster.service.ts).
 
 ### Context
@@ -101,15 +71,15 @@ service, and call the `message()` method, passing in a [Notification](https://gi
 the result of `message()` to observe any [NotificationAction](https://github.com/fabric8-ui/ngx-base/blob/master/src/app/notifications/notification-action.ts)s that result
 from the notification.
 
-## Continuous Delivery & Semantic Relases
+## Continuous Delivery & Semantic Releases
 
 In ngx-fabric8-wit we use the
 [semantic-release
 plugin](https://github.com/semantic-release/semantic-release). That means that all you have to do is use the AngularJS Commit
 Message Conventions (documented below). Once the PR is merged, a new
 release will be automatically published to npmjs.com and a release tag
-created on github. The version will be updated following semantic
-versionning rules.
+created on GitHub. The version will be updated following semantic
+versioning rules.
 
 ### Commit Message Format
 
@@ -172,13 +142,13 @@ Based on https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commi
 
 ### Examples
 
-Appears under "Features" header, pencil subheader:
+Appears under "Features" header, pencil sub-header:
 
 ```
 feat(pencil): add 'graphiteWidth' option
 ```
 
-Appears under "Bug Fixes" header, graphite subheader, with a link to issue #28:
+Appears under "Bug Fixes" header, graphite sub-header, with a link to issue #28:
 
 ```
 fix(graphite): stop graphite breaking when width < 0.1
@@ -205,4 +175,3 @@ This reverts commit 667ecc1654a317a13331b17617d973392f415f02.
 ### Commitizen - craft valid commit messages
 
 Commitizen helps you craft correct commit messages. Install it using `npm install commitizen -g`. Then run `git cz` rather than `git commit`.
-

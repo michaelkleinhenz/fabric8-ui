@@ -1,17 +1,20 @@
 import { Broadcaster } from 'ngx-base';
 import { AuthenticationService } from 'ngx-login-client';
-import { OnLogin } from 'fabric8-runtime-console';
+import { OnLogin } from '../a-runtime-console/index';
 import { AnalyticService } from './shared/analytics.service';
 import { Spaces } from 'ngx-fabric8-wit';
 /*
  * Angular 2 decorators and services
  */
 import { Component, ViewEncapsulation } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, NavigationEnd, NavigationStart } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 
 import { AboutService } from './shared/about.service';
 import { NotificationsService } from './shared/notifications.service';
 import { LoginService } from './shared/login.service';
+import { BrandingService } from './shared/branding.service';
+import { FeatureFlagConfig } from './models/feature-flag-config';
 
 
 /*
@@ -19,15 +22,14 @@ import { LoginService } from './shared/login.service';
  * Top Level Component
  */
 @Component({
-  host: {
-    'class': 'app app-component flex-container in-column-direction flex-grow-1'
-  },
+  encapsulation: ViewEncapsulation.None,
   selector: 'f8-app',
-  styleUrls: ['./app.component.scss'],
+  styleUrls: ['./app.component.less'],
   templateUrl: './app.component.html'
 })
 export class AppComponent {
-
+  public experimentalFeatureEnabled: boolean;
+  public isExperimentalFeature: boolean;
 
   constructor(
     private about: AboutService,
@@ -40,7 +42,9 @@ export class AppComponent {
     private onLogin: OnLogin,
     private authService: AuthenticationService,
     private broadcaster: Broadcaster,
-    private router: Router
+    private router: Router,
+    private titleService: Title,
+    private brandingService: BrandingService
   ) {
   }
 
@@ -51,6 +55,44 @@ export class AppComponent {
     this.activatedRoute.params.subscribe(() => {
       this.loginService.login();
     });
+
+    this.router.events
+      .filter(event => event instanceof NavigationEnd)
+      .map(() => this.activatedRoute)
+      .map(route => {
+        //reset all experimental feature flag properties
+        this.experimentalFeatureEnabled = false;
+        this.isExperimentalFeature = false;
+        while (route.firstChild) route = route.firstChild;
+        return route;
+      })
+      .filter(route => route.outlet === 'primary')
+      .mergeMap(route => route.data)
+      .subscribe((event) => {
+        let routeTree = this.activatedRoute.snapshot;
+        let featureFlagsInTree;
+
+        while (routeTree.firstChild) {
+          if(routeTree.data && routeTree.data['featureFlagConfig']) {
+            featureFlagsInTree = routeTree.data['featureFlagConfig'];
+          }
+          routeTree = routeTree.firstChild;
+        }
+
+        if (event['featureFlagConfig'] || featureFlagsInTree) {
+          let featureFlagConfig = event['featureFlagConfig'] as FeatureFlagConfig || featureFlagsInTree;
+          this.experimentalFeatureEnabled = featureFlagConfig.enabled;
+          this.isExperimentalFeature = true;
+        }
+        let title = event['title'] ? `${event['title']} - ${this.brandingService.name}` : this.brandingService.name;
+        this.titleService.setTitle(title);
+      });
+  }
+
+  updateFeatureEnabled($event: boolean) {
+    if($event) {
+      this.experimentalFeatureEnabled = $event;
+    }
   }
 
   handleAction($event: any): void {

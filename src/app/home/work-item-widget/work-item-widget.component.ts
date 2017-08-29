@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 import { WorkItemService, WorkItem } from 'fabric8-planner';
@@ -7,9 +7,10 @@ import { UserService, User } from 'ngx-login-client';
 import { Observable } from "rxjs/Observable";
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   selector: 'alm-work-item-widget',
   templateUrl: './work-item-widget.component.html',
-  styleUrls: ['./work-item-widget.component.scss'],
+  styleUrls: ['./work-item-widget.component.less'],
   providers: [SpaceService]
 })
 export class WorkItemWidgetComponent implements OnDestroy, OnInit  {

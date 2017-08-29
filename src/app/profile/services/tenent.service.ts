@@ -28,12 +28,28 @@ export class TenentService {
   /**
    * Update tenent
    *
-   * @returns {Observable<Codebase>}
+   * @returns {Observable<any>}
    */
   updateTenent(): Observable<any> {
     let url = `${this.userUrl}/services`;
     return this.http
       .patch(url, null, { headers: this.headers })
+      .map(response => {
+        return response;
+      })
+      .catch((error) => {
+        return this.handleError(error);
+      });
+  }
+
+  /**
+   * Cleanup tenant
+   * @returns {Observable<any>}
+   */
+  cleanupTenant(): Observable<any> {
+    let url = `${this.userUrl}/services`;
+    return this.http
+      .delete(url, { headers: this.headers })
       .map(response => {
         return response;
       })

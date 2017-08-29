@@ -1,18 +1,16 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
-
 import { Logger } from 'ngx-base';
 import { Space, SpaceService, Context, Contexts } from 'ngx-fabric8-wit';
-import { IModalHost } from '../../space-wizard/models/modal-host';
-
-
+import { IModalHost } from '../../space/wizard/models/modal-host';
+import { EventService } from "../../shared/event.service";
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   selector: 'alm-spaces',
   templateUrl: 'spaces.component.html',
-  styleUrls: ['./spaces.component.scss'],
-  providers: [SpaceService]
+  styleUrls: ['./spaces.component.less'],
 })
 export class SpacesComponent implements OnInit {
 
@@ -29,7 +27,8 @@ export class SpacesComponent implements OnInit {
     private router: Router,
     private spaceService: SpaceService,
     private logger: Logger,
-    private contexts: Contexts
+    private contexts: Contexts,
+    private eventService: EventService
   ) {
     this.contexts.current.subscribe(val => this.context = val);
   }
@@ -77,6 +76,9 @@ export class SpacesComponent implements OnInit {
     if (this.context && this.context.user && this.spaceToDelete) {
       let space = this.spaceToDelete;
       this.spaceService.deleteSpace(space)
+        .do(() => {
+          this.eventService.deleteSpaceSubject.next(space);
+        })
         .subscribe(spaces => {
           let index = this._spaces.indexOf(space);
           this._spaces.splice(index, 1);
@@ -91,6 +93,10 @@ export class SpacesComponent implements OnInit {
     } else {
       this.logger.error("Failed to retrieve list of spaces owned by user");
     }
+  }
+
+  canDeleteSpace(creatorId: string): boolean {
+    return creatorId === this.context.user.id;
   }
 
   confirmDeleteSpace(space: Space): void {

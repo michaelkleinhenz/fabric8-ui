@@ -1,5 +1,5 @@
-<div class="col-xs-6 margin-top-25" *ngIf="spaces.length !== 0">
-  <select class="combobox form-control"
+<div class="col-sm-6 margin-top-25" *ngIf="spaces.length !== 0">
+  <select class="form-control"
           [(ngModel)]="currentSpaceId"
           (ngModelChange)="fetchWorkItems()">
     <option value="default">Select a space to work with...</option>
@@ -10,7 +10,7 @@
 </div>
 <div *ngIf="workItems.length === 0; then showBlankState else showWorkItems"></div>
 <ng-template #showBlankState>
-  <div class="col-xs-12 padding-none"
+  <div class="col-sm-12"
        [ngClass]="{'margin-top-15': spaces.length !== 0}">
     <div class="blank-slate-pf">
       <div class="blank-slate-f8-icon">
@@ -28,7 +28,7 @@
   </div>
 </ng-template>
 <ng-template #showWorkItems>
-  <div class="col-xs-12 padding-none">
+  <div class="col-sm-12">
     <ul class="list-group list-view-pf list-view-pf-view">
       <li class="list-group-item" *ngFor="let workItem of workItems | take: 10">
         <div class="list-view-pf-main-info">
@@ -37,7 +37,7 @@
               <div class="list-group-item-text">
                 <span almIcon [iconType]="workItem.attributes['system.state']" class="color-grey pull-left create-work-item-icon"></span>
                 <span class="color-grey pull-left fa {{workItem.relationships?.baseType?.data?.attributes?.icon}} create-work-item-icon"></span>
-                <span>{{workItem.id}}</span>
+                <span>{{workItem.attributes['system.number']}}</span>
                 <span class="work-item-title" *ngIf="workItem.attributes">
                       <a [routerLink]="['/', loggedInUser.attributes.username, currentSpace.attributes.name, 'plan', 'detail', workItem.id]">
                         {{workItem.attributes['system.title']}}</a>

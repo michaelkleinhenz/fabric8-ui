@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { Router }            from '@angular/router';
 
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   selector: 'alm-profile',
   templateUrl: 'profile.component.html',
-  styleUrls: ['./profile.component.scss']
+  styleUrls: ['./profile.component.less']
 })
 export class ProfileComponent implements OnInit {
 

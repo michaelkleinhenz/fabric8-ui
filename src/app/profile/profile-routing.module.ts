@@ -10,9 +10,34 @@ const routes: Routes = [
     component: ProfileComponent,
     children: [
       { path: '', component: OverviewComponent },
-      { path: '_spaces', loadChildren: './spaces/spaces.module#SpacesModule' },
-      { path: '_resources', loadChildren: './resources/resources.module#ResourcesModule' },
-      { path: '_update', loadChildren: './update/update.module#UpdateModule' }
+      {
+        path: '_spaces',
+        loadChildren: './spaces/spaces.module#SpacesModule',
+        data: {
+          title: 'Spaces'
+        }
+      },
+      {
+        path: '_update',
+        loadChildren: './update/update.module#UpdateModule',
+        data: {
+          title: 'Profile'
+        }
+      },
+      {
+        path: '_cleanup',
+        loadChildren: './cleanup/cleanup.module#CleanupModule',
+        data: {
+          title: 'Cleanup'
+        }
+      },
+      {
+        path: '_tenant',
+        loadChildren: './tenant/tenant.module#TenantModule',
+        data: {
+          title: 'Tenant'
+        }
+      }
     ]
   }
 ];

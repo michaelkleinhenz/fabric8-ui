@@ -27,31 +27,7 @@ const NormalModuleReplacementPlugin = require('webpack/lib/NormalModuleReplaceme
 const ProvidePlugin = require('webpack/lib/ProvidePlugin');
 const ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin');
 const UglifyJsPlugin = require('webpack/lib/optimize/UglifyJsPlugin');
-
-
-
-const sassModules = [
-  {
-    name: 'bootstrap'
-  }, {
-    name: 'font-awesome',
-    module: 'font-awesome',
-    path: 'font-awesome',
-    sass: 'scss'
-  }, {
-    name: 'patternfly',
-    module: 'patternfly-sass-with-css'
-  }
-];
-
-sassModules.forEach(function (val) {
-  val.module = val.module || val.name + '-sass';
-  val.path = val.path || path.join(val.module, 'assets');
-  val.modulePath = val.modulePath || path.join('node_modules', val.path);
-  val.sass = val.sass || path.join('stylesheets');
-  val.sassPath = path.join(helpers.root(), val.modulePath, val.sass);
-});
-
+// const TsConfigPathsPlugin = require('awesome-typescript-loader');
 
 /*
  * Webpack Constants
@@ -129,8 +105,18 @@ module.exports = function (options) {
        *
        * See: https://webpack.js.org/configuration/resolve/#resolve-modules
        */
-      modules: [helpers.root('src'), helpers.root('node_modules')]
-
+      modules: [helpers.root('src'), helpers.root('node_modules'),
+        // Todo: fabric8-stack-analysis-ui/src/app/stack/overview/chart-component.js cannot locate c3
+        helpers.root("node_modules/patternfly/node_modules/c3"),
+        helpers.root("node_modules/patternfly/node_modules/d3")
+      // ],
+      //
+      // plugins: [
+      //   new TsConfigPathsPlugin( {
+      //     baseUrl: helpers.root('src'),
+      //     configFileName: 'tsconfig.json'
+      //   })
+      ]
     },
 
     /*
@@ -211,7 +197,7 @@ module.exports = function (options) {
             }, {
               loader: 'css-loader',
               options: {
-                minimize: isProd,
+                minimize: true,
                 sourceMap: true,
                 context: '/'
               }
@@ -219,46 +205,48 @@ module.exports = function (options) {
           ],
         },
         {
-          test: /^(?!.*component).*\.scss$/,
+          test: /^(?!.*component).*\.less$/,
           use: extractCSS.extract({
             fallback: 'style-loader',
             use: [
               {
                 loader: 'css-loader',
                 options: {
-                  minimize: isProd,
+                  minimize: true,
                   sourceMap: true,
                   context: '/'
                 }
               }, {
-                loader: 'sass-loader',
+                loader: 'less-loader',
                 options: {
-                  includePaths: sassModules.map(function (val) {
-                    return val.sassPath;
-                  }),
+                  paths: [
+                    path.resolve(__dirname, "../node_modules/patternfly/src/less"),
+                    path.resolve(__dirname, "../node_modules/patternfly/node_modules")
+                  ],
                   sourceMap: true
                 }
               }
             ],
           })
         }, {
-          test: /\.component\.scss$/,
+          test: /\.component\.less$/,
           use: [
             {
               loader: 'to-string-loader'
             }, {
               loader: 'css-loader',
               options: {
-                minimize: isProd,
+                minimize: true,
                 sourceMap: true,
                 context: '/'
               }
             }, {
-              loader: 'sass-loader',
+              loader: 'less-loader',
               options: {
-                includePaths: sassModules.map(function (val) {
-                  return val.sassPath;
-                }),
+                paths: [
+                  path.resolve(__dirname, "../node_modules/patternfly/src/less"),
+                  path.resolve(__dirname, "../node_modules/patternfly/node_modules")
+                ],
                 sourceMap: true
               }
             }
@@ -266,7 +254,7 @@ module.exports = function (options) {
         },
 
         /**
-         * Fil e loader for supporting fonts, for example, in CSS files.
+         * File loader for supporting fonts, for example, in CSS files.
          */
         {
           test: /\.woff2?$|\.ttf$|\.eot$|\.svg$/,
@@ -342,13 +330,12 @@ module.exports = function (options) {
        *
        * See: https://www.npmjs.com/package/copy-webpack-plugin
        */
+       /*
+       * this needs to be redirected to reside in the _assets/ directory
+       */
       new CopyWebpackPlugin([
         {
           from: 'src/meta'
-        },
-        {
-          from: 'node_modules/fabric8-runtime-console/src/img',
-          to: 'img'
         }
       ]),
 

@@ -1,0 +1,27 @@
+<codebases-toolbar
+  (onFilterChange)="filterChange($event)"
+  (onSortChange)="sortChange($event)"
+  [resultsCount]="resultsCount"></codebases-toolbar>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <pfng-list
+          [actionTemplate]="actionTemplate"
+          [config]="listConfig"
+          [items]="codebases"
+          [itemTemplate]="itemTemplate"
+          [expandTemplate]="expandTemplate"
+          (onActionSelect)="openAddCodebasePanel()">
+        <ng-template #itemTemplate let-item="item" let-index="index">
+          <codebases-item [codebase]="item" [index]="index" class="codebase-item"></codebases-item>
+        </ng-template>
+        <ng-template #actionTemplate let-item="item" let-index="index">
+          <codebases-item-actions [codebase]="item" [index]="index"></codebases-item-actions>
+        </ng-template>
+        <ng-template #expandTemplate let-item="item" let-index="index">
+          <codebases-item-details [codebase]="item"></codebases-item-details>
+        </ng-template>
+      </pfng-list>
+    </div>
+  </div>
+</div>

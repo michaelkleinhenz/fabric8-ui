@@ -6,6 +6,8 @@ import { trimEnd } from 'lodash';
 import { LoginComponent } from './login/login.component';
 import { SigninComponent } from './signin/signin.component';
 import { ContextResolver } from './shared/context-resolver.service';
+import { ExperimentalFeatureGuard } from './shared/experimental-feature.guard';
+import { ExperimentalFeatureResolver } from './shared/experimental-feature.resolver';
 
 
 export function removeAction(url: string) {
@@ -20,28 +22,32 @@ export const routes: Routes = [
     loadChildren: './landing-page/landing-page.module#LandingPageModule',
     pathMatch: 'full'
   },
-  // Temporary page to control the app
-  {
-    path: '_control',
-    loadChildren: './control/control.module#ControlModule'
-  },
 
   // Home
   {
     path: '_home',
-    loadChildren: './home/home.module#HomeModule'
+    loadChildren: './home/home.module#HomeModule',
+    data: {
+      title: 'Home'
+    }
   },
 
   // Getting started
   {
     path: '_gettingstarted',
-    loadChildren: './getting-started/getting-started.module#GettingStartedModule'
+    loadChildren: './getting-started/getting-started.module#GettingStartedModule',
+    data: {
+      title: 'Getting Started'
+    }
   },
 
   // Error Pages
   {
     path: '_error',
-    loadChildren: './error/error.module#ErrorModule'
+    loadChildren: './layout/error/error.module#ErrorModule',
+    data: {
+      title: 'Error'
+    }
   },
   // Profile
   {
@@ -49,16 +55,10 @@ export const routes: Routes = [
     resolve: {
       context: ContextResolver
     },
-    loadChildren: './profile/profile.module#ProfileModule'
-  },
-
-  // Settings
-  {
-    path: ':entity/_settings',
-    resolve: {
-      context: ContextResolver
-    },
-    loadChildren: './settings/settings.module#SettingsModule'
+    loadChildren: './profile/profile.module#ProfileModule',
+    data: {
+      title: 'Profile'
+    }
   },
 
   // Analyze
@@ -67,25 +67,38 @@ export const routes: Routes = [
     resolve: {
       context: ContextResolver
     },
-    loadChildren: './analyze/analyze.module#AnalyzeModule'
+    loadChildren: './space/analyze/analyze.module#AnalyzeModule',
+    data: {
+      title: 'Analyze'
+    }
   },
 
   // Plan
   {
     path: ':entity/:space/plan',
     resolve: {
-      context: ContextResolver
+      context: ContextResolver,
+      featureFlagConfig: ExperimentalFeatureResolver
     },
-    loadChildren: './plan/plan.module#PlanModule'
+    loadChildren: './space/plan/plan.module#PlanModule',
+    data: {
+      title: 'Plan: Backlog',
+      featureName: 'Planner'
+    }
   },
 
   // Plan board
   {
     path: ':entity/:space/plan/board',
     resolve: {
-      context: ContextResolver
+      context: ContextResolver,
+      featureFlagConfig: ExperimentalFeatureResolver
     },
-    loadChildren: './plan/board/board.module#BoardModule'
+    loadChildren: './space/plan/board/board.module#BoardModule',
+    data: {
+      title: 'Plan: Board',
+      featureName: 'Planner'
+    }
   },
 
   // Create
@@ -94,7 +107,10 @@ export const routes: Routes = [
     resolve: {
       context: ContextResolver
     },
-    loadChildren: './create/create.module#CreateModule'
+    loadChildren: './space/create/create.module#CreateModule',
+    data: {
+      title: 'Create'
+    }
   },
 
   // Space-settings
@@ -103,7 +119,10 @@ export const routes: Routes = [
     resolve: {
       context: ContextResolver
     },
-    loadChildren: './space-settings/space-settings.module#SpaceSettingsModule'
+    loadChildren: './space/settings/space-settings.module#SpaceSettingsModule',
+    data: {
+      title: 'Areas'
+    }
   },
   {
     path: '**',

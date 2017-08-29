@@ -1,9 +1,8 @@
 @Library('github.com/fabric8io/fabric8-pipeline-library@master')
 def utils = new io.fabric8.Utils()
 def flow = new io.fabric8.Fabric8Commands()
-def project = 'fabric8io/fabric8-ui'
+def project = 'fabric8-ui/fabric8-ui'
 def ciDeploy = false
-def tempVersion
 def imageName
 node{
     properties([
@@ -22,10 +21,10 @@ fabric8UITemplate{
                 if (utils.isCI()){
 
                     container('ui'){
-                        tempVersion = pipeline.ci()
+                        pipeline.ci()
                     }
 
-                    imageName = "fabric8/fabric8-ui:${tempVersion}"
+                    imageName = "fabric8/fabric8-ui:SNAPSHOT-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
                     container('docker'){
                         pipeline.buildImage(imageName)
                     }
@@ -38,7 +37,7 @@ fabric8UITemplate{
                         pipeline.ci()
                     }
                     def v = getNewVersion {}
-                    imageName = "fabric8/fabric8-ui:v${v}"
+                    imageName = "fabric8/fabric8-ui:${v}"
                     container('docker'){
                         pipeline.buildImage(imageName)
                     }
@@ -59,7 +58,7 @@ if (ciDeploy){
            route = deployOpenShiftSnapshot{
                mavenRepo = 'http://central.maven.org/maven2/io/fabric8/online/apps/fabric8-ui'
                githubRepo = 'fabric8-ui'
-               originalImageName = 'registry.devshift.net/fabric8io/fabric8-ui'
+               originalImageName = 'registry.devshift.net/fabric8-ui/fabric8-ui'
                newImageName = imageName
                openShiftProject = prj
            }
@@ -67,15 +66,20 @@ if (ciDeploy){
        stage('notify'){
            def changeAuthor = env.CHANGE_AUTHOR
            if (!changeAuthor){
-               error "no commit author found so cannot comment on PR"
+               echo "no commit author found so cannot comment on PR"
            }
            def pr = env.CHANGE_ID
            if (!pr){
-               error "no pull request number found so cannot comment on PR"
+               echo "no pull request number found so cannot comment on PR"
            }
-           def message = "@${changeAuthor} snapshot fabric8-ui is deployed and available for testing at https://${route}"
-           container('clients'){
-               flow.addCommentToPullRequest(message, pr, project)
+           def message = "@${changeAuthor} ${imageName} fabric8-ui is deployed and available for testing at https://${route}"
+
+           if (!pr){
+                echo message
+           } else {
+                container('clients'){
+                    flow.addCommentToPullRequest(message, pr, project)
+                }
            }
        }
    }

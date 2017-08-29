@@ -42,6 +42,7 @@ const OSO_CORS_PROXY = {
   pathRewrite: { '^/_p/oso': '' },
   // Disable cert checks for dev only
   secure: false,
+  ws: true,
   //changeOrigin: true,
   logLevel: "debug",
     onProxyRes: function (proxyRes, req, res) {
@@ -143,7 +144,7 @@ module.exports = function (options) {
             helpers.nodeModulePath("angular2-flash-messages"),
             helpers.nodeModulePath("ngx-dropdown"),
             helpers.nodeModulePath("ngx-modal"),
-            helpers.nodeModulePath("ng2-modal"),
+            helpers.nodeModulePath("ngx-modal"),
             helpers.nodeModulePath("ng2-dnd")
           ],
           use: ["source-map-loader"],

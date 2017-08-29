@@ -1,16 +1,16 @@
+import { Fabric8UIConfig } from './../config/fabric8-ui-config';
 import { Response } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { Spaces, Space } from 'ngx-fabric8-wit';
 import { Observable } from 'rxjs';
 import { UserService } from 'ngx-login-client';
-import { ConfigMapService, ConfigMap } from 'fabric8-runtime-console';
+import { ConfigMapService, ConfigMap } from '../../../a-runtime-console/index';
 import { Notifications, NotificationType } from 'ngx-base';
 
 import * as yaml from 'js-yaml';
 
 import { Fabric8RuntimeConsoleService } from './fabric8-runtime-console.service';
-import { ObservableFabric8UIConfig } from './../config/fabric8-ui-config.service';
-
+import {DevNamespaceScope} from "a-runtime-console/kubernetes/service/devnamespace.scope";
 
 interface ConfigMapWrapper {
   configMap?: ConfigMap;
@@ -26,10 +26,11 @@ export class SpaceNamespaceService {
 
   constructor(
     private userService: UserService,
-    private fabric8UIConfig: ObservableFabric8UIConfig,
+    private fabric8UIConfig: Fabric8UIConfig,
     private configMapService: ConfigMapService,
     private spaces: Spaces,
     private notifications: Notifications,
+    private devNamespace: DevNamespaceScope,
     private fabric8RuntimeConsoleService: Fabric8RuntimeConsoleService
   ) { }
 
@@ -127,22 +128,7 @@ export class SpaceNamespaceService {
   }
 
   buildNamespace(): Observable<string> {
-    return Observable.forkJoin(
-      this.userService
-        .loggedInUser
-        .map(user => user.attributes.username)
-        // TODO Quick hack around the username problems
-        .map(username => {
-          let s = username.split(/@/gi);
-          return s ? s[0].replace('.', '-') : username;
-        })
-        .first(),
-      this.fabric8UIConfig
-        .map(config => config.pipelinesNamespace)
-        .first(),
-      (username: string, namespace: string) => ({ username, namespace })
-    )
-      .map(val => `${val.username}${val.namespace}`);
+    return this.devNamespace.namespace;
   }
 
 }

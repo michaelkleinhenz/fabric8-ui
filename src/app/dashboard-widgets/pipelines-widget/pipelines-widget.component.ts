@@ -1,6 +1,6 @@
 import { PipelinesService } from './../../shared/runtime-console/pipelines.service';
 import { Observable } from 'rxjs/Rx';
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, ViewEncapsulation } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { Broadcaster } from 'ngx-base';
@@ -13,16 +13,17 @@ import {
   filterPipelines,
   BuildConfigStore,
   BuildStore
-} from 'fabric8-runtime-console';
+} from '../../../a-runtime-console/index';
 
 import { Fabric8RuntimeConsoleService } from './../../shared/runtime-console/fabric8-runtime-console.service';
 
 import { DummyService } from './../shared/dummy.service';
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   selector: 'fabric8-pipelines-widget',
   templateUrl: './pipelines-widget.component.html',
-  styleUrls: ['./pipelines-widget.component.scss']
+  styleUrls: ['./pipelines-widget.component.less']
 })
 export class PipelinesWidgetComponent implements OnInit {
 

@@ -1,0 +1,65 @@
+@import (reference) '../../assets/stylesheets/shared/osio.less';
+.cards-pf { background-color: @color-pf-black-300; }
+.home-wrapper {
+  margin-top: 0;
+  min-height: 100%;
+  height: 100%;
+  background-color: @color-pf-black-300;
+  .pf-icon-home {
+    font-size: @pf-icon-4x;
+    padding: 5px 0 3px;
+  }
+}
+.home-banner {
+  height: 325px;
+  margin-right: -30px;
+  margin-bottom: 40px;
+  margin-left: -30px;
+  background-color: @color-pf-black-900;
+  @media (min-width: 768px) and (max-width: 1200px) { height: 450px; }
+  @media (max-width: 768px) { height: auto; }
+  .home-header-background-image;
+  background-repeat: no-repeat;
+  color: @color-pf-white;
+}
+.home-banner-title {
+  padding-left: 20px;
+  padding-right: 20px;
+  font-size: 1.429em;
+  font-weight: 300;
+}
+.list-group-item-text {
+  width: 540px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-pf-view .card-pf-top-element .card-pf-icon-circle {
+  &.home-icon {
+    width: 75px;
+    height: 75px;
+    font-size: 30px;
+    line-height: 71px;
+    border-width: 3px;
+    border-color: @color-pf-red-100;
+  }
+}
+.home-logo {
+  margin-top: 0;
+  width: 100%;
+  max-width: 350px;
+}
+.home-title {
+  margin-top: 30px;
+  font-weight: 400;
+}
+.vert-center {
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  @media (min-width: 768px) and (max-width: 1200px) {
+    top: 0;
+    transform: none;
+  }
+  @media (max-width: 768px) { transform: none; }
+}

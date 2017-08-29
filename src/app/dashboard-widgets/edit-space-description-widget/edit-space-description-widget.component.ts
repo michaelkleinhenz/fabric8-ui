@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 
 import { Observable, Subject } from 'rxjs';
 
@@ -10,9 +10,10 @@ import { SpaceNamespaceService } from './../../shared/runtime-console/space-name
 import { DummyService } from './../shared/dummy.service';
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   selector: 'fabric8-edit-space-description-widget',
   templateUrl: './edit-space-description-widget.component.html',
-  styleUrls: ['./edit-space-description-widget.component.scss']
+  styleUrls: ['./edit-space-description-widget.component.less']
 })
 export class EditSpaceDescriptionWidgetComponent implements OnInit {
 

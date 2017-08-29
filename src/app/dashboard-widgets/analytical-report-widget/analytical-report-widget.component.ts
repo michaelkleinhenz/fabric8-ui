@@ -1,6 +1,6 @@
 import { PipelinesService } from './../../shared/runtime-console/pipelines.service';
 import { Observable, Subscription } from 'rxjs/Rx';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { Broadcaster } from 'ngx-base';
@@ -10,14 +10,15 @@ import {
   BuildConfig,
   BuildConfigs,
   Build
-} from 'fabric8-runtime-console';
+} from '../../../a-runtime-console/index';
 
-import {StackAnalysesService, getStackRecommendations} from 'fabric8-stack-analysis-ui';
+import { StackAnalysesService, getStackRecommendations } from 'fabric8-stack-analysis-ui';
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   selector: 'fabric8-analytical-report-widget',
   templateUrl: './analytical-report-widget.component.html',
-  styleUrls: ['./analytical-report-widget.component.scss'],
+  styleUrls: ['./analytical-report-widget.component.less'],
   providers: [
     StackAnalysesService
   ]
@@ -25,7 +26,7 @@ import {StackAnalysesService, getStackRecommendations} from 'fabric8-stack-analy
 export class AnalyticalReportWidgetComponent implements OnInit, OnDestroy {
 
   buildConfigs: Observable<BuildConfigs>;
-  buildConfigsCount: Observable<number>;
+  buildConfigsCount: number;
 
   currentPipeline: string;
   currentPipelineBuilds: Array<Build>;
@@ -48,32 +49,41 @@ export class AnalyticalReportWidgetComponent implements OnInit, OnDestroy {
     private pipelinesService: PipelinesService,
     private stackAnalysisService: StackAnalysesService
   ) {
+    this.buildConfigsCount = 0;
   }
 
   ngOnInit() {
-    this._contextSubscription = this.context.current.subscribe(context => console.log('Context', context));
+    this._contextSubscription = this.context.current
+      .subscribe(context => console.log('Context', context));
 
     let bcs = this.pipelinesService.current
       .publish();
     this.buildConfigs = bcs;
 
     this.buildConfigs.subscribe((data) => {
-      this.pipelines = data;
+      this.pipelines = this.filterPipelines(data);
+      if (this.pipelines.length !== 0) {
+        if (this.currentPipeline !== this.pipelines[0].id) {
+          this.currentPipeline = this.pipelines[0].id;
+          this.selectedPipeline();
+        }
+      } else {
+        this.currentPipeline = 'default';
+      }
+      this.buildConfigsCount = this.pipelines.length;
     });
-    // Locate the first pipeline
-    this.buildConfigs
-    .filter(val => val.length > 0)
-    .first()
-    .subscribe(val => {
-      this.currentPipeline = val[0].id;
-      this.selectedPipeline();
-    });
-    let returnStatement: boolean = false;
-    /*this.buildConfigs = this.buildConfigs.map(buildConfs => buildConfs.filter((builds) => {
-      returnStatement = false;
-      if (builds.interestingBuilds && builds.interestingBuilds.length > 0) {
-        for (let build of builds.interestingBuilds) {
-          console.log('Here');
+    bcs.connect();
+  }
+
+  ngOnDestroy() {
+    this._contextSubscription.unsubscribe();
+  }
+
+  filterPipelines(buildConfs: Array<any>): Array<any> {
+    return buildConfs.filter(item => {
+      let returnStatement: boolean = false;
+      if (item && item.interestingBuilds && item.interestingBuilds.length > 0) {
+        for (let build of item.interestingBuilds) {
           if (build.annotations['fabric8.io/bayesian.analysisUrl']) {
             returnStatement = true;
             break;
@@ -81,13 +91,7 @@ export class AnalyticalReportWidgetComponent implements OnInit, OnDestroy {
         }
       }
       return returnStatement;
-    }));*/
-    this.buildConfigsCount = bcs.map(buildConfigs => buildConfigs.length);
-    bcs.connect();
-  }
-
-  ngOnDestroy() {
-    this._contextSubscription.unsubscribe();
+    });
   }
 
   selectedPipeline(): void {
@@ -117,16 +121,17 @@ export class AnalyticalReportWidgetComponent implements OnInit, OnDestroy {
     if (build) {
       let url: string = build.annotations['fabric8.io/bayesian.analysisUrl'];
       this.stackAnalysisService
-          .getStackAnalyses(url)
-          .subscribe((data) => {
-            let recommendationsObservable = getStackRecommendations(data);
-            if (recommendationsObservable) {
-              let recommendations: Array<any> = [];
-              recommendationsObservable.subscribe((result) => {
-                let missing: Array<any> = result.missing || [];
-                let version: Array<any> = result.version || [];
-
-                let stackName: string = result['stackName'] || 'An existing stack';
+        .getStackAnalyses(url)
+        .subscribe((data) => {
+          let recommendationsObservable = getStackRecommendations(data);
+          if (recommendationsObservable) {
+            let recommendations: Array<any> = [];
+            recommendationsObservable.subscribe((result) => {
+              result = result['widget_data'] || [];
+              result.forEach(item => {
+                let missing: Array<any> = item.missing || [];
+                let version: Array<any> = item.version || [];
+                let stackName: string = item['stackName'] || 'An existing stack';
 
                 for (let i in missing) {
                   if (missing.hasOwnProperty(i)) {
@@ -139,44 +144,46 @@ export class AnalyticalReportWidgetComponent implements OnInit, OnDestroy {
                     });
                   }
                 }
+
                 for (let i in version) {
                   if (version.hasOwnProperty(i)) {
                     let keys: Array<string> = Object.keys(version[i]);
                     recommendations.push({
                       suggestion: 'Recommendation',
-                      action: 'Update',
+                      action: 'Change',
                       message: keys[0] + ' : ' + version[i][keys[0]],
                       subMessage: stackName + ' has a different version of dependency'
                     });
                   }
                 }
-
-                this.stackAnalysisInformation['recommendations'] = recommendations;
-                // Restrict the recommendations to a particular limit as specified in UX
-                this.stackAnalysisInformation['recommendations'].splice(this.stackAnalysisInformation['recommendationsLimit']);
-                let finishedTime: string = result.finishedTime;
-                if (finishedTime) {
-                  let date = null;
-                  try {
-                    date = new Date(finishedTime);
-                    let options: any = { year: 'numeric', month: 'long', day: 'numeric', time: 'numeric' };
-                    finishedTime = date.toLocaleDateString('en-US', options);
-                  } catch (error) {
-
-                  }
-                }
-                this.stackAnalysisInformation['finishedTime'] = 'Report Completed ' + finishedTime;
-
               });
-            } else {
-              this.stackAnalysisInformation['recommendations'].length = 0;
-            }
-            this.hideLoader();
+
+              this.stackAnalysisInformation['recommendations'] = recommendations;
+              // Restrict the recommendations to a particular limit as specified in UX
+              this.stackAnalysisInformation['recommendations'].splice(this.stackAnalysisInformation['recommendationsLimit']);
+              let finishedTime: string = result && result[0] ? result[0].finishedTime : 'NA';
+              if (finishedTime) {
+                let date = null;
+                try {
+                  date = new Date(finishedTime);
+                  let options: any = { year: 'numeric', month: 'long', day: 'numeric', time: 'numeric' };
+                  finishedTime = date.toLocaleDateString('en-US', options);
+                } catch (error) {
+
+                }
+              }
+              this.stackAnalysisInformation['finishedTime'] = 'Report Completed ' + finishedTime;
+
+            });
+          } else {
+            this.stackAnalysisInformation['recommendations'].length = 0;
+          }
+          this.hideLoader();
         });
-      } else {
-        this.currentBuild = null;
-        this.hideLoader();
-      }
+    } else {
+      this.currentBuild = null;
+      this.hideLoader();
+    }
   }
 
 }

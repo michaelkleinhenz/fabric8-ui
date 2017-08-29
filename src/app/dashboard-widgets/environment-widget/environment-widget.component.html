@@ -1,13 +1,13 @@
-<div d="spacehome-environments-card" class="environment-widget card-pf card-f8">
-  <div class="card-pf-heading">
+<div id="spacehome-environments-card" class="environment-widget card-pf f8-card">
+  <div class="card-pf-heading f8-card-heading">
     <h2 class="card-pf-title">
       <a id="spacehome-environments-title" [routerLink]="[contextPath | async, 'create', 'apps']">Applications</a>
-      <span id="spacehome-environments-badge" class="badge card-f8-badge">{{appsCount}}</span>
+      <span id="spacehome-environments-badge" class="badge f8-card-badge">{{(apps | async).length}}</span>
     </h2>
   </div>
-  <div class="card-pf-body card-f8-body">
-    <div class="blank-slate-f8-card" *ngIf="appsCount === 0">
-      <div class="blank-slate-f8-icon">
+  <div class="card-pf-body f8-card-body">
+    <div class="f8-blank-slate-card" *ngIf="(apps | async).length === 0">
+      <div class="f8-blank-slate-icon">
         <span class="pficon pficon-add-circle-o"></span>
       </div>
       <h3>This space has no applications</h3>
@@ -15,10 +15,19 @@
         Applications are shown once you deploy your code through a pipeline onto the defined environments.
       </p>
     </div>
-    <ul id="spacehome-environments-list" class="list-group" *ngIf="appsCount > 0">
-      <li class="list-group-item" *ngFor="let env of loadedEnvironments">
-        <h3>{{env.name}}</h3>
-        <div><a href="{{env.apps.deployUrl}}" target="_blank">{{env.apps.name}}</a> - {{env.apps.version}}</div>
+    <ul id="spacehome-environments-list" class="list-group" *ngIf="(apps | async).length > 0">
+      <li class="list-group-item" *ngFor="let app of apps | async">
+        <h5>{{app.name}}</h5>
+        <div *ngFor="let envInfo of app.environmentDetails">
+          <span *ngIf="envInfo && envInfo.deployment">
+            <a [href]="envInfo.exposeUrl" title="View the app in this environment" target="app" class="app-version-link" *ngIf="envInfo.exposeUrl">
+              {{envInfo.environmentName}} - {{envInfo.version}}
+            </a>
+            <span *ngIf="!envInfo.exposeUrl">
+              {{envInfo.environmentName}} - {{envInfo.version}}
+            </span>
+          </span>
+        </div>
       </li>
     </ul>
   </div>

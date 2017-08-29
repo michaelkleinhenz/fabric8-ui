@@ -1,10 +1,9 @@
 import { Fabric8RuntimeConsoleService } from './fabric8-runtime-console.service';
 import { SpaceNamespaceService } from './space-namespace.service';
 import { Spaces } from 'ngx-fabric8-wit';
-import { ObservableFabric8UIConfig } from './../config/fabric8-ui-config.service';
 import { Observable } from 'rxjs/Rx';
 import { Injectable } from '@angular/core';
-import { SpaceNamespace } from 'fabric8-runtime-console';
+import { SpaceNamespace } from '../../../a-runtime-console/index';
 
 @Injectable()
 export class Fabric8UISpaceNamespace implements SpaceNamespace {

@@ -1,0 +1,45 @@
+<div class="container-fluid">
+  <h3 class="areas-header">Areas that make up the {{context.space.attributes.name | spaceName}} Space:</h3>
+  <div class="row">
+    <div class="col-md-11">
+      Areas
+    </div>
+    <div class="table-action-heading" (click)="addChildArea()">
+      <i class="pficon pficon-add-circle-o margin-top-4">
+      </i>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <pfng-list
+        [config]="listViewConfig"
+        [itemTemplate]="itemTemplate"
+        [actionTemplate]="actionTemplate"
+        [items]="areas" >
+        <template #itemTemplate let-item="item" let-index="index">
+          <div class="list-pf-content-wrapper">
+            <div class="list-pf-main-content">
+              <div class="list-pf-title">{{itemPath(item.attributes)}}</div>
+            </div>
+          </div>
+        </template>
+        <template #actionTemplate let-item="item" let-index="index">
+          <span class="dropdown-kebab-pf areas-display dropdown" dropdown>
+            <button class="btn btn-link dropdown-toggle" type="button" dropdownToggle>
+              <span class="fa fa-ellipsis-v"></span>
+            </button>
+            <ul class="dropdown-menu-right dropdown-menu" aria-labelledby="dropdownKebab" *dropdownMenu>
+              <li role="menuitem"><a href="javascript:void(0)" class="secondary-action" (click)="addChildArea(item.id)">Add Child Area</a></li>
+            </ul>
+          </span>
+        </template>
+      </pfng-list>
+    </div>
+  </div>
+</div>
+
+<modal #createArea modalClass="chromeless-modal">
+  <modal-content class="chromeless-modal-content">
+    <create-area-dialog [host]="createArea" [parentId]="selectedAreaId" [areas]="areas" (onAdded)="addArea($event)"></create-area-dialog>
+  </modal-content>
+</modal>

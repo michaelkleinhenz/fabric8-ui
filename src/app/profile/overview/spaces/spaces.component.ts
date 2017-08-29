@@ -6,13 +6,13 @@ import { Logger } from 'ngx-base';
 import { Space, SpaceService } from 'ngx-fabric8-wit';
 import { UserService, User } from 'ngx-login-client';
 
-import { IModalHost } from '../../../space-wizard/models/modal-host';
+import { IModalHost } from '../../../space/wizard/models/modal-host';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'alm-spaces',
   templateUrl: './spaces.component.html',
-  styleUrls: ['./spaces.component.scss'],
+  styleUrls: ['./spaces.component.less'],
   providers: [SpaceService]
 })
 export class SpacesComponent implements OnDestroy, OnInit  {

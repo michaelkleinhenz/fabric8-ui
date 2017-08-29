@@ -30,25 +30,24 @@ fi
 if [ -z "${OAUTH_CLIENT_ID}" ]; then
   export OAUTH_CLIENT_ID="fabric8"
 fi
-if [ -z "${K8S_API_SERVER_PROTOCOL}" ]; then
-  export K8S_API_SERVER_PROTOCOL="http"
-fi
-if [ -z "${K8S_API_SERVER_BASE_PATH}" ]; then
-  export K8S_API_SERVER_BASE_PATH="/_p/oso"
-fi
 if [ -z "${FABRIC8_PIPELINES_NAMESPACE}" ]; then
   export FABRIC8_PIPELINES_NAMESPACE=""
 fi
 
 
+export BRANDING="openshiftio"
+export K8S_API_SERVER_BASE_PATH=""
+export K8S_API_SERVER_PROTOCOL="https"
 export OAUTH_ISSUER="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}"
 export WS_K8S_API_SERVER="${PROXIED_K8S_API_SERVER}"
+export WS_K8S_API_SERVER_PROTOCOL="wss"
+export WS_K8S_API_SERVER_BASE_PATH=""
 
 export FABRIC8_SSO_API_URL=https://sso.openshift.io/
 export FABRIC8_WIT_API_URL=https://api.openshift.io/api/
 
-# TODO use prod preview for now
-export FABRIC8_FORGE_API_URL="https://forge.api.prod-preview.openshift.io"
+export FABRIC8_FORGE_API_URL="https://forge.api.openshift.io"
+
 
 echo "Configured to connect to kubernetes cluster at https://${PROXIED_K8S_API_SERVER}/"
 
@@ -68,4 +67,5 @@ echo "FABRIC8_WIT_API_URL            ${FABRIC8_WIT_API_URL}"
 echo "FABRIC8_FORGE_API_URL          ${FABRIC8_FORGE_API_URL}"
 echo "FABRIC8_REALM                  ${FABRIC8_REALM}"
 echo "WS_K8S_API_SERVER              ${WS_K8S_API_SERVER}"
+echo "BRANDING                       ${BRANDING}"
 echo ""
