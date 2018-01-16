@@ -36,6 +36,26 @@
   </nav>
 </ng-template>
 <ng-template #showHeader>
+  <osio-app-header 
+    [systemContext]="systemContext"
+    [followLinks]="false"
+    [user]="loggedInUser" 
+    [currentContext]="currentContext" 
+    [recentContexts]="recentContexts"
+    [systemStatus]="systemStatus"
+    (onSelectRecentContext)="onSelectRecentContext($event)"
+    (onSelectViewAllSpaces)="onSelectViewAllSpaces($event)"
+    (onSelectAccountHome)="onSelectAccountHome($event)"
+    (onSelectCreateSpace)="onSelectCreateSpace($event)"
+    (onSelectSystemHealth)="onSelectSystemHealth($event)"
+    (onSelectMenuItem)="onSelectMenuItem($event)"
+    (onSelectUserProfile)="onSelectUserProfile($event)"
+    (onSelectLogout)="onSelectLogout($event)"
+    (onSelectLogin)="onSelectLogin($event)"
+    (onSelectAbout)="onSelectAbout($event)"
+    (onFollowedLink)="onFollowedLink($event)">
+  </osio-app-header> 
+  <!--
   <nav class="navbar navbar-default navbar-inverse navbar-pf navbar-fixed-top" role="navigation" *ngIf="context">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -60,7 +80,6 @@
               </span>
               </div>
             </a>
-            <!-- current Space and recent items dropdown -->
             <ul class="dropdown-menu recent-items" *dropdownMenu>
               <li class="recent-items-toggle" *ngFor="let m of recent">
                 <a class="recent-items-text-dropdown"
@@ -116,7 +135,6 @@
             </ul>
           </li>
         </ul>
-        <!-- user profile dropdown -->
         <ul id="header_rightDropdown" class="nav navbar-nav navbar-right">
           <li id="header_status" dropdown class="dropdown status-dropdown" placement="top" tooltip="Status: Ok" (onShown)="onStatusListVisible(true)" (onClose)="onStatusListVisible(false)">
             <a (onHidden)="onStatusList(false)" class="dropdown-toggle" dropdownToggle>
@@ -179,7 +197,6 @@
             </ul>
           </li>
         </ul>
-        <!-- secondary navigation for all sub-links -->
         <ul class="nav navbar-nav navbar-primary persistent-secondary">
           <li *ngFor="let m of context?.type?.menus" [class.active]="m.active" [class.with-no-children]="(m.menus||[]).length===0">
             <a [routerLink]="[m.fullPath]" *ngIf="!m.hide">
@@ -199,9 +216,10 @@
             </ul>
           </li>
         </ul>
-      </div> <!-- .navbar-collapse -->
-    </div> <!-- /.container-fluid -->
+      </div>
+    </div>
   </nav>
+  -->
   <ng-template #spaceWizard>
     <space-wizard (onSelect)="selectFlow($event)" (onCancel)="closeModal()" [style.display]="selectedFlow !== 'start' ? 'none': ''"></space-wizard>
     <flow-selector (onSelect)="selectFlow($event)" (onCancel)="closeModal()" [space]="space" [style.display]="selectedFlow !== 'selectFlow' ? 'none': ''"></flow-selector>

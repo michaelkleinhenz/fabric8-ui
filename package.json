@@ -147,7 +147,8 @@
     "pluralize": "7.0.0",
     "rxjs": "5.5.2",
     "uuid": "3.1.0",
-    "zone.js": "0.8.18"
+    "zone.js": "0.8.18",
+    "osio-ngx-framework": "0.13.0"    
   },
   "devDependencies": {
     "@krux/condition-jenkins": "1.0.1",

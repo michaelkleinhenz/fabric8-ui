@@ -29,6 +29,11 @@ import {
 } from 'ngx-login-client';
 import { WidgetsModule } from 'ngx-widgets';
 import {
+  FooterModule,
+  HeaderModule,
+  HeaderService
+} from 'osio-ngx-framework';
+import {
   ActionModule,
   ChartModule,
   EmptyStateModule,
@@ -154,7 +159,9 @@ export type StoreType = {
     PatternFlyNgModule,
     StatusListModule,
     // AppRoutingModule must appear last
-    AppRoutingModule
+    AppRoutingModule,
+    HeaderModule,
+    FooterModule
   ],
   declarations: [ // declare which components, directives and pipes belong to the module
     AppComponent,
@@ -233,7 +240,8 @@ export type StoreType = {
     TreeListComponent,
     UserService,
     witApiUrlProvider,
-    realmProvider
+    realmProvider,
+    HeaderService
   ],
   schemas: [],
   bootstrap: [AppComponent]

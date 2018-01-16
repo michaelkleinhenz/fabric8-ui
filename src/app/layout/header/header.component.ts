@@ -5,17 +5,19 @@ import { Observable, Subscription } from 'rxjs';
 
 import { Broadcaster, Logger } from 'ngx-base';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
-import { Context, Contexts } from 'ngx-fabric8-wit';
+import { Context, Contexts, Space, Spaces, SpaceService } from 'ngx-fabric8-wit';
 import { AuthenticationService, User, UserService } from 'ngx-login-client';
+import { ContextLink, HeaderService, MenuItem, SystemStatus } from 'osio-ngx-framework';
 
 import { Navigation } from '../../models/navigation';
 import { DummyService } from '../../shared/dummy.service';
 import { LoginService } from '../../shared/login.service';
-import { MenuedContextType } from './menued-context-type';
 
+/*
 interface MenuHiddenCallback {
   (headerComponent: HeaderComponent): Observable<boolean>;
 }
+*/
 
 @Component({
   selector: 'alm-app-header',
@@ -23,49 +25,27 @@ interface MenuHiddenCallback {
   styleUrls: ['./header.component.less'],
   providers: []
 })
-export class HeaderComponent implements OnInit, OnDestroy {
-  title = 'Almighty';
-  imgLoaded: Boolean = false;
-  statusListVisible = false;
-  modalRef: BsModalRef;
-  isIn = false;   // store state
-  toggleState() { // click handler
-      let bool = this.isIn;
-      this.isIn = bool === false ? true : false;
-  }
+export class HeaderComponent implements OnInit {
 
-  onStatusListVisible = (flag: boolean) => {
-    this.statusListVisible = flag;
-  }
-
-
-  menuCallbacks = new Map<String, MenuHiddenCallback>([
-    [
-      '_settings', function(headerComponent) {
-        return headerComponent.checkContextUserEqualsLoggedInUser();
-      }
-    ],
-    [
-      '_resources', function(headerComponent) {
-        return headerComponent.checkContextUserEqualsLoggedInUser();
-      }
-    ],
-    [
-      'settings', function(headerComponent) {
-        return headerComponent.checkContextUserEqualsLoggedInUser();
-      }
-    ]
-  ]);
-
-  recent: Context[];
+  systemContext: string = 'platform';
+  currentContext: Context;
+  recentContexts: Context[] = [];
+  systemStatus: SystemStatus[];
   loggedInUser: User;
-  private _context: Context;
-  private _defaultContext: Context;
-  private _loggedInUserSubscription: Subscription;
-  private plannerFollowQueryParams: Object = {};
-  private eventListeners: any[] = [];
+  followQueryParams: Object = {};
+  spaces: Space[] = [];
+  currentSpace: Space = null;
+  modalRef: BsModalRef;
+
+  //recent: Context[];
+  //loggedInUser: User;
+  //private _context: Context;
+  //private _defaultContext: Context;
+  //private _loggedInUserSubscription: Subscription;
+  //private plannerFollowQueryParams: Object = {};
+  //private eventListeners: any[] = [];
   private selectedFlow: string;
-  private space: string;
+  //private space: string;
 
   constructor(
     public router: Router,
@@ -77,16 +57,23 @@ export class HeaderComponent implements OnInit, OnDestroy {
     public dummy: DummyService,
     private contexts: Contexts,
     private modalService: BsModalService,
-    private authentication: AuthenticationService
+    private authentication: AuthenticationService,
+    private headerService: HeaderService
   ) {
-    this.space = '';
+    // remove this for production
+    this.headerService.clean();
+
     this.selectedFlow = 'start';
+
+    // TODO is this needed?
     router.events.subscribe((val) => {
       if (val instanceof NavigationEnd) {
         this.broadcaster.broadcast('navigate', { url: val.url } as Navigation);
-        this.updateMenus();
       }
     });
+
+    /*
+    this.space = '';
     contexts.current.subscribe(val => {
       this._context = val;
       this.updateMenus();
@@ -107,44 +94,203 @@ export class HeaderComponent implements OnInit, OnDestroy {
         }
       }
     );
+    */
+  }
+
+  private goTo(menuItem: MenuItem) {
+    for (let m of menuItem.contextLinks) {
+      if (m.context == 'platform') {
+        if (m.type == 'internal') {
+          this.logger.log('[HeaderComponent] internal link found for MenuItem: ' + m.path);
+          this.goToInternal(m.path);
+        } else if (m.type == 'external') {
+          this.logger.log('[HeaderComponent] external link found for MenuItem: ' + m.path);
+          this.goToExternal(m.path);
+        } else {
+          this.logger.warn('[HeaderComponent] No link found for MenuItem: ' + menuItem.id);
+        }
+      }
+    }
+  }
+
+  private getBaseURL() {
+    // TODO Integration: this might change (and possibly be a runtime configuration)
+    let l = document.createElement('a');
+    l.href = location.href;
+    return l.protocol + '//' + l.host + '/';
+  }
+
+  private goToInternal(path: string) {
+    this.logger.log('[HeaderComponent] Switching to internal route: ' + path);
+    this.router.navigate([path]);
+  }
+
+  private goToExternal(path: string) {
+    this.logger.log('[HeaderComponent] Switching to external route: ' + path);
+    window.location.href = path;
+  }
+
+  // Event handlers
+
+  onSelectMenuItem(menuItem: MenuItem) {
+    this.goTo(menuItem);
+  }
+
+  onSelectLogout() {
+    this.logger.log('[HeaderComponent] Logging out user.');
+    this.authentication.logout();
+    this.loggedInUser = null as User;
+    this.headerService.clean();
+  }
+
+  onSelectLogin() {
+    this.router.navigate(['/login']);
+  }
+
+  onSelectAbout() {
+    this.logger.log('[HeaderComponent] Showing about modal.');
+    // TODO Integration: this currently opens a modal dialog
+    // This should be part of the header, or at least a common component in a library
+  }
+
+  onSelectCreateSpace() {
+    this.logger.log('[HeaderComponent] Showing create new space.');
+    // TODO Integration: this currently opens a modal dialog
+    // This should either be a common component from a library OR an external link to a platform dialog
+  }
+
+  onSelectRecentContext(context: Context) {
+    // TODO Integration: this may need to switch to platform in some cases (it looks like there are not only spaces in the recentContexts)
+    if (context.space) {
+      this.setCurrentSpace(context.space);
+    // this.goToExternal(this.getBaseURL() + context.path);
+    }
+  }
+
+  onSelectViewAllSpaces() {
+    // TODO
+    this.goToExternal(this.getBaseURL() + this.loggedInUser.id + '/_spaces');
+  }
+
+  onSelectAccountHome() {
+    // TODO
+    this.goToExternal(this.getBaseURL() + '_home');
+  }
+
+  onSelectUserProfile() {
+    // TODO
+    this.goToExternal(this.getBaseURL() + this.loggedInUser.id);
+  }
+
+  onFollowedLink(url: string) {
+    // NOP
   }
 
   ngOnInit(): void {
-    this.listenToEvents();
-  }
 
-  ngOnDestroy() {
-    this.eventListeners.forEach(e => e.unsubscribe());
-  }
+    // logout can also be called by an event from other parts of the app
+    this.broadcaster.on<string>('logout')
+      .subscribe(message => {
+        this.logger.warn('[HeaderComponent] Received logout broadcast event.');
+        this.onSelectLogout();
+      });
 
+    // on an authentication error, we logout and send the user to the login
+    this.broadcaster.on<any>('authenticationError')
+      .subscribe(() => {
+        this.logger.warn('[HeaderComponent] Received authenticationError broadcast event.');
+        this.onSelectLogout();
+        this.router.navigate(['/login']);
+      });
 
-  listenToEvents() {
-    this.eventListeners.push(
-      this.route.queryParams.subscribe(params => {
-        this.plannerFollowQueryParams = {};
-        if (Object.keys(params).indexOf('iteration') > -1) {
-          this.plannerFollowQueryParams['iteration'] = params['iteration'];
+    // we subscribe to the UserService to get notified when the user switches
+    this.userService.getUser().subscribe(user => {
+      if (user && user.id) {
+        this.logger.log('[HeaderComponent] UserService signals new user ' + user.id);
+        this.loggedInUser = user;
+      } else {
+        this.logger.warn('[HeaderComponent] UserService returned empty object user value.');
+        this.loggedInUser = null;
+      }
+    });
+
+    /*
+    contexts.current.subscribe(val => {
+      this._context = val;
+      this.updateMenus();
+    });
+    // TODO unwrap the context, get space, wrap again
+    */
+    // we subscribe to the current space to get notified when the space switches. This only fires if a switch is happening, not on bootstrap
+    this.spacesService.current.subscribe(space => {
+      this.currentSpace = space;
+      if (this.currentSpace) {
+        // Note: the ""+this.currentSpace.path is needed because Space is broken
+        this.logger.log('[HeaderComponent] Received from SpaceService new currentContext: ' + space.id);
+        let context = this.headerService.createContext(this.currentSpace.attributes.name, '' + this.currentSpace.id, this.currentSpace, this.loggedInUser);
+        this.currentContext = context;
+      } else {
+        this.currentContext = null;
+      }
+    });
+
+    // contexts.recent.subscribe(val => this.recent = val); // TODO unwrap and wrap again
+    // we subscribe to all spaces list to get notified when the spaces list changes
+    this.spacesService.getAllSpaces().subscribe((spaces) => {
+      this.logger.log('[HeaderComponent] Received from SpaceService new spaces list with length: ' + spaces.length);
+      this.spaces = spaces as Space[];
+      for (let thisSpace of this.spaces) {
+        this.logger.log('[HeaderComponent] Prepare space from allSpaces: ' + thisSpace.id);
+        let context = this.headerService.createContext(thisSpace.attributes.name, '' + thisSpace.id, thisSpace, this.loggedInUser);
+        this.recentContexts.push(context);
+        this.headerService.addRecentContext(context);
+      }
+      // if there is no currentSpace yet, we select the first one to be the new currentSpace
+      if (!this.currentSpace) {
+        this.currentSpace = spaces[0];
+        if (this.currentSpace) {
+          this.logger.log('[HeaderComponent] Selected new Space on result of getAllSpaces: ' + this.currentSpace.id);
+          // Note: the ""+this.currentSpace.path is needed because Space is broken
+          let context = this.headerService.createContext(this.currentSpace.attributes.name, '' + this.currentSpace.id, this.currentSpace, this.loggedInUser);
+          this.currentContext = context;
+          this.setCurrentSpace(this.currentSpace);
+        } else {
+          this.logger.log('[HeaderComponent] Deselected Space.');
+          this.currentContext = null;
+          this.setCurrentSpace(null);
         }
-      })
-    );
+      }
+    });
+
+    // we preserve the iteration query params TODO: is this needed?
+    this.route.queryParams.subscribe(params => {
+      this.logger.warn('[HeaderComponent] QueryParams changed.');
+      this.followQueryParams = {};
+      if (Object.keys(params).indexOf('iteration') > -1) {
+        this.followQueryParams['iteration'] = params['iteration'];
+      }
+    });
+
+    // if there is no systemStatus retrieved from the storage, init it with something meaningful
+    this.headerService.retrieveSystemStatus().subscribe((systemStatus: SystemStatus[]) => {
+      // TODO: instead of adding template data here, retrieve the real systemStatus somewhere, because the user could have used a deepLink
+      if (!systemStatus || systemStatus.length == 0) {
+        this.systemStatus = [
+          {
+            id: 'planner',
+            name: 'Planner',
+            statusOk: true
+          } as SystemStatus
+        ];
+        this.headerService.persistSystemStatus(this.systemStatus);
+      }
+    });
   }
 
-  login() {
-    this.broadcaster.broadcast('login');
-    this.loginService.redirectToAuth();
-  }
-
-  logout() {
-    this.loginService.logout();
-
-  }
-
-  onImgLoad() {
-    this.imgLoaded = true;
-  }
-
-  resetData(): void {
-    this.imgLoaded = false;
+  setCurrentSpace(space: Space) {
+    this.logger.log('[HeaderComponent] Switching current space to ' + space.id);
+    // TODO
+    // [routerLink]="[m.path]", just route to url of space
   }
 
   openForgeWizard(addSpace: TemplateRef<any>) {
@@ -165,6 +311,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.space = $event.space;
   }
 
+  /*
   get context(): Context {
     if (this.router.url.startsWith('/_home')) {
       return this._defaultContext;
@@ -172,73 +319,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       return this._context;
     }
   }
+  */
 
   get isGettingStartedPage(): boolean {
     return (this.router.url.indexOf('_gettingstarted') !== -1);
   }
 
-  private updateMenus() {
-    if (this.context && this.context.type && this.context.type.hasOwnProperty('menus')) {
-      let foundPath = false;
-      let menus = (this.context.type as MenuedContextType).menus;
-      for (let n of menus) {
-        // Clear the menu's active state
-        n.active = false;
-        if (this.menuCallbacks.has(n.path)) {
-          this.menuCallbacks.get(n.path)(this).subscribe(val => n.hide = val);
-        }
-        // lets go in reverse order to avoid matching
-        // /namespace/space/create instead of /namespace/space/create/pipelines
-        // as the 'Create' page matches to the 'Codebases' page
-        let subMenus = (n.menus || []).slice().reverse();
-        if (subMenus) {
-          for (let o of subMenus) {
-            // Clear the menu's active state
-            o.active = false;
-            if (!foundPath && o.fullPath === decodeURIComponent(this.router.url)) {
-              foundPath = true;
-              o.active = true;
-              n.active = true;
-            }
-            if (this.menuCallbacks.has(o.path)) {
-              this.menuCallbacks.get(o.path)(this).subscribe(val => o.hide = val);
-            }
-          }
-          if (!foundPath) {
-            // lets check if the URL matches part of the path
-            for (let o of subMenus) {
-              if (!foundPath && decodeURIComponent(this.router.url).startsWith(o.fullPath + '/')) {
-                foundPath = true;
-                o.active = true;
-                n.active = true;
-              }
-              if (this.menuCallbacks.has(o.path)) {
-                this.menuCallbacks.get(o.path)(this).subscribe(val => o.hide = val);
-              }
-            }
-          }
-          if (!foundPath && this.router.routerState.snapshot.root.firstChild) {
-            // routes that can't be correctly matched based on the url should use the parent path
-            for (let o of subMenus) {
-              let parentPath = decodeURIComponent('/' + this.router.routerState.snapshot.root.firstChild.url.join('/'));
-              if (!foundPath && o.fullPath === parentPath) {
-                foundPath = true;
-                o.active = true;
-                n.active = true;
-              }
-              if (this.menuCallbacks.has(o.path)) {
-                this.menuCallbacks.get(o.path)(this).subscribe(val => o.hide = val);
-              }
-            }
-          }
-        } else if (!foundPath && n.fullPath === this.router.url) {
-          n.active = true;
-          foundPath = true;
-        }
-      }
-    }
-  }
-
+  /*
   private checkContextUserEqualsLoggedInUser(): Observable<boolean> {
     return Observable.combineLatest(
       Observable.of(this.context).map(val => val.user.id),
@@ -246,5 +333,5 @@ export class HeaderComponent implements OnInit, OnDestroy {
       (a, b) => (a !== b)
     );
   }
-
+  */
 }
