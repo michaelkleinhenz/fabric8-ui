@@ -52,7 +52,7 @@ export class HeaderComponent implements OnInit {
     private authentication: AuthenticationService,
     private headerService: HeaderService
   ) {
-    // remove this for production
+    // TODO remove this for production
     this.headerService.clean();
 
     this.selectedFlow = 'start';
@@ -81,53 +81,68 @@ export class HeaderComponent implements OnInit {
     }
   }
 
-  private getBaseURL() {
+  private getBaseURL(): string {
     // TODO Integration: this might change (and possibly be a runtime configuration)
     let l = document.createElement('a');
     l.href = location.href;
     return l.protocol + '//' + l.host + '/';
   }
 
-  private goToInternal(path: string) {
+  private goToInternal(path: string): void {
     this.logger.log('[HeaderComponent] Switching to internal route: ' + path);
     this.router.navigate([path]);
   }
 
-  private goToExternal(path: string) {
+  private goToExternal(path: string): void {
     this.logger.log('[HeaderComponent] Switching to external route: ' + path);
     window.location.href = path;
   }
 
+  private alreadyInRecent(contextPath: string): boolean {
+    if (this.recentContexts) {
+      this.recentContexts.forEach(thisRecentContext => {
+        if (thisRecentContext.path === contextPath) {
+          return true;
+        }
+      });
+      return false;
+    } else {
+      // this should not happen
+      this.recentContexts = [] as Context[];
+      return false;
+    }
+  }
+
   // Event handlers
 
-  onSelectMenuItem(menuItem: MenuItem) {
+  private onSelectMenuItem(menuItem: MenuItem): void {
     this.goTo(menuItem);
   }
 
-  onSelectLogout() {
+  private onSelectLogout(): void {
     this.logger.log('[HeaderComponent] Logging out user.');
     this.authentication.logout();
     this.loggedInUser = null as User;
     this.headerService.clean();
   }
 
-  onSelectLogin() {
+  private onSelectLogin(): void {
     this.router.navigate(['/login']);
   }
 
-  onSelectAbout() {
+  private onSelectAbout(): void {
     this.logger.log('[HeaderComponent] Showing about modal.');
     // TODO Integration: this currently opens a modal dialog
     // This should be part of the header, or at least a common component in a library
   }
 
-  onSelectCreateSpace() {
+  private onSelectCreateSpace(): void {
     this.logger.log('[HeaderComponent] Showing create new space.');
     // TODO Integration: this currently opens a modal dialog
     // This should either be a common component from a library OR an external link to a platform dialog
   }
 
-  onSelectRecentContext(context: Context) {
+  private onSelectRecentContext(context: Context): void {
     if (context.space) {
       this.logger.log('[HeaderComponent] Switching current space to ' + context.space.id);
       // go to internal route of this context
@@ -135,19 +150,19 @@ export class HeaderComponent implements OnInit {
     }
   }
 
-  onSelectViewAllSpaces() {
-    this.goToInternal('/' + this.loggedInUser.id + '/_spaces');
+  private onSelectViewAllSpaces(): void {
+    this.goToInternal('/' + this.loggedInUser.attributes.username + '/_spaces');
   }
 
-  onSelectAccountHome() {
+  private onSelectAccountHome(): void {
     this.goToInternal('/_home');
   }
 
-  onSelectUserProfile() {
-    this.goToInternal('/' + this.loggedInUser.id);
+  private onSelectUserProfile(): void {
+    this.goToInternal('/' + this.loggedInUser.attributes.username);
   }
 
-  onFollowedLink(url: string) {
+  private onFollowedLink(url: string): void {
     // NOP
   }
 
@@ -171,7 +186,7 @@ export class HeaderComponent implements OnInit {
     // we subscribe to the UserService to get notified when the user switches
     this.userService.getUser().subscribe(user => {
       if (user && user.id) {
-        this.logger.log('[HeaderComponent] UserService signals new user ' + user.id);
+        this.logger.log('[HeaderComponent] UserService signals new user ' + user.attributes.username);
         this.loggedInUser = user;
       } else {
         this.logger.warn('[HeaderComponent] UserService returned empty object user value.');
@@ -188,7 +203,16 @@ export class HeaderComponent implements OnInit {
     // we subscribe to all spaces list to get notified when the spaces list changes
     this.contexts.recent.subscribe(val => {
       this.logger.log('[HeaderComponent] Received from contexts new recent contexts list with length: ' + val.length);
-      this.recentContexts = val;
+      // TODO: context.recent seems to be only sending one Context at a time. Is this correct?
+      // TODO: the following is a hack, replace it!
+      if (val) {
+        val.forEach(element => {
+          if (!this.alreadyInRecent(element.path)) {
+            this.headerService.addRecentContext(element);
+            this.recentContexts.push(element);
+          }
+        });
+      }
       // if there is no currentContext yet, we select the first one to be the new currentContext
       if (!this.currentContext) {
         this.currentContext = this.recentContexts[0];
