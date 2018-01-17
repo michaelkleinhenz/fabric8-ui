@@ -24,7 +24,7 @@ export class MenusService {
               {
                 context: 'platform',
                 type: 'internal',
-                path: '/settings'
+                path: 'settings'
               } as ContextLink,
               {
                 context: 'planner',
@@ -42,7 +42,7 @@ export class MenusService {
                   {
                     context: 'platform',
                     type: 'internal',
-                    path: '/settings/areas'
+                    path: ''
                   } as ContextLink,
                   {
                     context: 'planner',
@@ -61,7 +61,7 @@ export class MenusService {
                   {
                     context: 'platform',
                     type: 'internal',
-                    path: '/settings/collaborators'
+                    path: 'collaborators'
                   } as ContextLink,
                   {
                     context: 'planner',
@@ -81,7 +81,7 @@ export class MenusService {
               {
                 context: 'platform',
                 type: 'internal',
-                path: '/analyze'
+                path: ''
               } as ContextLink,
               {
                 context: 'planner',
@@ -160,16 +160,19 @@ export class MenusService {
         console.log('Failed to attach menus to', context.type);
         return;
       }
-      /* I think we do not need this
+      // TODO: someone should seriously refactor this!
       for (let n of res.menus) {
-        n.fullPath = this.buildPath(context.path, n.path);
-        if (n.menus) {
-          for (let o of n.menus) {
-            o.fullPath = this.buildPath(context.path, n.path, o.path);
+        for (let l of n.contextLinks) {
+          l.path = this.buildPath(context.path, l.path);
+          if (n.menus) {
+            for (let o of n.menus) {
+              for (let sl of o.contextLinks) {
+                sl.path = this.buildPath(context.path, l.path, sl.path);
+              }
+            }
           }
         }
       }
-      */
       context.type = res;
     }
   }
@@ -301,7 +304,7 @@ export class MenusService {
         {
           context: 'platform',
           type: 'internal',
-          path: '/create'
+          path: 'create'
         } as ContextLink,
         {
           context: 'planner',

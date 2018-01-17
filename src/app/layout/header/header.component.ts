@@ -36,15 +36,8 @@ export class HeaderComponent implements OnInit {
   followQueryParams: Object = {};
   modalRef: BsModalRef;
 
-  //recent: Context[];
-  //loggedInUser: User;
-  //private _context: Context;
   //private _defaultContext: Context;
-  //private _loggedInUserSubscription: Subscription;
-  //private plannerFollowQueryParams: Object = {};
-  //private eventListeners: any[] = [];
   private selectedFlow: string;
-  //private space: string;
 
   constructor(
     public router: Router,
@@ -70,30 +63,6 @@ export class HeaderComponent implements OnInit {
         this.broadcaster.broadcast('navigate', { url: val.url } as Navigation);
       }
     });
-
-    /*
-    this.space = '';
-    contexts.current.subscribe(val => {
-      this._context = val;
-      this.updateMenus();
-    });
-    contexts.default.subscribe(val => {
-      this._defaultContext = val;
-    });
-    contexts.recent.subscribe(val => this.recent = val);
-
-    // Currently logged in user
-    this.userService.loggedInUser.subscribe(
-      val => {
-        if (val.id) {
-          this.loggedInUser = val;
-        } else {
-          this.resetData();
-          this.loggedInUser = null;
-        }
-      }
-    );
-    */
   }
 
   private goTo(menuItem: MenuItem) {
@@ -159,27 +128,23 @@ export class HeaderComponent implements OnInit {
   }
 
   onSelectRecentContext(context: Context) {
-    // TODO Integration: this may need to switch to platform in some cases (it looks like there are not only spaces in the recentContexts)
     if (context.space) {
       this.logger.log('[HeaderComponent] Switching current space to ' + context.space.id);
-      // TODO
-      // [routerLink]="[m.path]", just route to url of space
+      // go to internal route of this context
+      this.router.navigate([context.path]);
     }
   }
 
   onSelectViewAllSpaces() {
-    // TODO
-    this.goToExternal(this.getBaseURL() + this.loggedInUser.id + '/_spaces');
+    this.goToInternal('/' + this.loggedInUser.id + '/_spaces');
   }
 
   onSelectAccountHome() {
-    // TODO
-    this.goToExternal(this.getBaseURL() + '_home');
+    this.goToInternal('/_home');
   }
 
   onSelectUserProfile() {
-    // TODO
-    this.goToExternal(this.getBaseURL() + this.loggedInUser.id);
+    this.goToInternal('/' + this.loggedInUser.id);
   }
 
   onFollowedLink(url: string) {
@@ -227,9 +192,6 @@ export class HeaderComponent implements OnInit {
       // if there is no currentContext yet, we select the first one to be the new currentContext
       if (!this.currentContext) {
         this.currentContext = this.recentContexts[0];
-      } else {
-        this.logger.log('[HeaderComponent] Deselected Context.');
-        this.currentContext = null;
       }
     });
 
@@ -244,7 +206,7 @@ export class HeaderComponent implements OnInit {
 
     // if there is no systemStatus retrieved from the storage, init it with something meaningful
     this.headerService.retrieveSystemStatus().subscribe((systemStatus: SystemStatus[]) => {
-      // TODO: instead of adding template data here, retrieve the real systemStatus somewhere, because the user could have used a deepLink
+      // TODO: instead of adding template data here, retrieve the real systemStatus somewhere
       if (!systemStatus || systemStatus.length == 0) {
         this.systemStatus = [
           {
@@ -277,6 +239,7 @@ export class HeaderComponent implements OnInit {
   }
 
   /*
+  TODO: we don't deal with the defaultContext yet
   get context(): Context {
     if (this.router.url.startsWith('/_home')) {
       return this._defaultContext;
