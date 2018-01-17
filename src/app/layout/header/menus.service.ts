@@ -180,7 +180,7 @@ export class MenusService {
   private buildPath(...args: string[]): string {
     let res = '';
     for (let p of args) {
-      if (p.startsWith('/')) {
+      if (p.startsWith('/') || p.startsWith('http')) {
         res = p;
       } else {
         res = res + '/' + p;
