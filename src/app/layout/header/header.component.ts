@@ -29,12 +29,11 @@ export class HeaderComponent implements OnInit {
 
   systemContext: string = 'platform';
   currentContext: Context;
+  space: Space;
   recentContexts: Context[] = [];
   systemStatus: SystemStatus[];
   loggedInUser: User;
   followQueryParams: Object = {};
-  spaces: Space[] = [];
-  currentSpace: Space = null;
   modalRef: BsModalRef;
 
   //recent: Context[];
@@ -162,8 +161,9 @@ export class HeaderComponent implements OnInit {
   onSelectRecentContext(context: Context) {
     // TODO Integration: this may need to switch to platform in some cases (it looks like there are not only spaces in the recentContexts)
     if (context.space) {
-      this.setCurrentSpace(context.space);
-    // this.goToExternal(this.getBaseURL() + context.path);
+      this.logger.log('[HeaderComponent] Switching current space to ' + context.space.id);
+      // TODO
+      // [routerLink]="[m.path]", just route to url of space
     }
   }
 
@@ -214,51 +214,22 @@ export class HeaderComponent implements OnInit {
       }
     });
 
-    /*
-    contexts.current.subscribe(val => {
-      this._context = val;
-      this.updateMenus();
-    });
-    // TODO unwrap the context, get space, wrap again
-    */
     // we subscribe to the current space to get notified when the space switches. This only fires if a switch is happening, not on bootstrap
-    this.spacesService.current.subscribe(space => {
-      this.currentSpace = space;
-      if (this.currentSpace) {
-        // Note: the ""+this.currentSpace.path is needed because Space is broken
-        this.logger.log('[HeaderComponent] Received from SpaceService new currentContext: ' + space.id);
-        let context = this.headerService.createContext(this.currentSpace.attributes.name, '' + this.currentSpace.id, this.currentSpace, this.loggedInUser);
-        this.currentContext = context;
-      } else {
-        this.currentContext = null;
-      }
+    this.contexts.current.subscribe(val => {
+      this.logger.log('[HeaderComponent] Received new currentContext: ' + val ? val.name : 'null');
+      this.currentContext = val;
     });
 
-    // contexts.recent.subscribe(val => this.recent = val); // TODO unwrap and wrap again
     // we subscribe to all spaces list to get notified when the spaces list changes
-    this.spacesService.getAllSpaces().subscribe((spaces) => {
-      this.logger.log('[HeaderComponent] Received from SpaceService new spaces list with length: ' + spaces.length);
-      this.spaces = spaces as Space[];
-      for (let thisSpace of this.spaces) {
-        this.logger.log('[HeaderComponent] Prepare space from allSpaces: ' + thisSpace.id);
-        let context = this.headerService.createContext(thisSpace.attributes.name, '' + thisSpace.id, thisSpace, this.loggedInUser);
-        this.recentContexts.push(context);
-        this.headerService.addRecentContext(context);
-      }
-      // if there is no currentSpace yet, we select the first one to be the new currentSpace
-      if (!this.currentSpace) {
-        this.currentSpace = spaces[0];
-        if (this.currentSpace) {
-          this.logger.log('[HeaderComponent] Selected new Space on result of getAllSpaces: ' + this.currentSpace.id);
-          // Note: the ""+this.currentSpace.path is needed because Space is broken
-          let context = this.headerService.createContext(this.currentSpace.attributes.name, '' + this.currentSpace.id, this.currentSpace, this.loggedInUser);
-          this.currentContext = context;
-          this.setCurrentSpace(this.currentSpace);
-        } else {
-          this.logger.log('[HeaderComponent] Deselected Space.');
-          this.currentContext = null;
-          this.setCurrentSpace(null);
-        }
+    this.contexts.recent.subscribe(val => {
+      this.logger.log('[HeaderComponent] Received from contexts new recent contexts list with length: ' + val.length);
+      this.recentContexts = val;
+      // if there is no currentContext yet, we select the first one to be the new currentContext
+      if (!this.currentContext) {
+        this.currentContext = this.recentContexts[0];
+      } else {
+        this.logger.log('[HeaderComponent] Deselected Context.');
+        this.currentContext = null;
       }
     });
 
@@ -285,12 +256,6 @@ export class HeaderComponent implements OnInit {
         this.headerService.persistSystemStatus(this.systemStatus);
       }
     });
-  }
-
-  setCurrentSpace(space: Space) {
-    this.logger.log('[HeaderComponent] Switching current space to ' + space.id);
-    // TODO
-    // [routerLink]="[m.path]", just route to url of space
   }
 
   openForgeWizard(addSpace: TemplateRef<any>) {

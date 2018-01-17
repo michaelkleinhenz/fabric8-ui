@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { cloneDeep } from 'lodash';
 import { Context, ContextType, ContextTypes } from 'ngx-fabric8-wit';
 
-import { MenuItem } from '../../models/menu-item';
+import { ContextLink, MenuItem } from 'osio-ngx-framework';
 import { MenuedContextType } from './menued-context-type';
 
 @Injectable()
@@ -12,46 +12,142 @@ export class MenusService {
   readonly menus: Map<ContextType, MenuItem[]>;
 
   constructor() {
-    this.menus = new Map<ContextType, MenuItem[]>([
-      [
-        ContextTypes.BUILTIN.get('space'),
-        [
+
+    this.menus = new Map<ContextType, MenuItem[]>();
+    let menuItems: MenuItem[] = [
           {
+            id: 'settings',
             name: '',
-            path: 'settings',
             icon: 'pficon pficon-settings',
+            active: false,
+            contextLinks: [
+              {
+                context: 'platform',
+                type: 'internal',
+                path: '/settings'
+              } as ContextLink,
+              {
+                context: 'planner',
+                type: 'external',
+                path: 'http://ext.menuEntry0.someContext1/'
+              } as ContextLink
+            ] as ContextLink[],
             menus: [
               {
+                id: 'settings_areas',
                 name: 'Areas',
-                path: '',
                 icon: '',
-                menus: []
-              },
+                active: false,
+                contextLinks: [
+                  {
+                    context: 'platform',
+                    type: 'internal',
+                    path: '/settings/areas'
+                  } as ContextLink,
+                  {
+                    context: 'planner',
+                    type: 'external',
+                    path: 'http://ext.menuEntry0.someContext1/'
+                  } as ContextLink
+                ] as ContextLink[],
+                menus: [] as MenuItem[]
+              } as MenuItem,
               {
+                id: 'settings_collaborators',
                 name: 'Collaborators',
-                path: 'collaborators'
-              }
-            ]
-          }, {
+                icon: '',
+                active: false,
+                contextLinks: [
+                  {
+                    context: 'platform',
+                    type: 'internal',
+                    path: '/settings/collaborators'
+                  } as ContextLink,
+                  {
+                    context: 'planner',
+                    type: 'external',
+                    path: 'http://ext.menuEntry0.someContext1/'
+                  } as ContextLink
+                ] as ContextLink[],
+                menus: [] as MenuItem[]
+              } as MenuItem
+            ] as MenuItem[]
+          } as MenuItem, {
+            id: 'analyze',
             name: 'Analyze',
-            path: ''
-          }, {
+            icon: '',
+            active: false,
+            contextLinks: [
+              {
+                context: 'platform',
+                type: 'internal',
+                path: '/analyze'
+              } as ContextLink,
+              {
+                context: 'planner',
+                type: 'external',
+                path: 'http://ext.menuEntry0.someContext1/'
+              } as ContextLink
+            ] as ContextLink[],
+            menus: [ ] as MenuItem[]
+          } as MenuItem, {
+            id: 'planner',
             name: 'Plan',
-            path: 'plan',
+            icon: '',
+            contextLinks: [
+              {
+                context: 'planner',
+                type: 'internal',
+                path: '/plan/list'
+              } as ContextLink,
+              {
+                context: 'platform',
+                type: 'external',
+                path: 'http://ext.menuEntry1.someContext1/'
+              } as ContextLink
+            ] as ContextLink[],
             menus: [
               {
+                id: 'planner_list',
                 name: 'Backlog',
-                path: ''
-              }, {
+                icon: 'fa fa-heart',
+                contextLinks: [
+                  {
+                    context: 'planner',
+                    type: 'internal',
+                    path: '/plan/list'
+                  } as ContextLink,
+                  {
+                    context: 'platform',
+                    type: 'external',
+                    path: 'http://ext.menuEntry1_1.someContext1/'
+                  } as ContextLink
+                ] as ContextLink[]
+              } as MenuItem,
+              {
+                id: 'planner_board',
                 name: 'Board',
-                path: 'board'
-              }
-            ]
-          },
+                icon: 'fa fa-heart',
+                contextLinks: [
+                  {
+                    context: 'planner',
+                    type: 'internal',
+                    path: '/plan/board'
+                  } as ContextLink,
+                  {
+                    context: 'platform',
+                    type: 'external',
+                    path: 'http://ext.menuEntry1_2.someContext1/'
+                  } as ContextLink
+                ] as ContextLink[]
+              } as MenuItem
+            ] as MenuItem[]
+          } as MenuItem,
           this.getCreateMenuItems()
-        ]
-      ]
-    ]);
+        ];
+
+        // store the menus on the 'space' context type key
+        this.menus.set(ContextTypes.BUILTIN.get('space'), menuItems);
   }
 
   public attach(context: Context) {
@@ -64,6 +160,7 @@ export class MenusService {
         console.log('Failed to attach menus to', context.type);
         return;
       }
+      /* I think we do not need this
       for (let n of res.menus) {
         n.fullPath = this.buildPath(context.path, n.path);
         if (n.menus) {
@@ -72,6 +169,7 @@ export class MenusService {
           }
         }
       }
+      */
       context.type = res;
     }
   }
@@ -91,34 +189,127 @@ export class MenusService {
 
   private getCreateMenuItems(): MenuItem {
     const displayDeployments = (ENV === 'development');
-    let menus = [
+
+    let menus: MenuItem[] = [
       {
+        id: 'codebases',
         name: 'Codebases',
-        path: ''
-      },
+        icon: '',
+        active: false,
+        contextLinks: [
+          {
+            context: 'platform',
+            type: 'internal',
+            path: ''
+          } as ContextLink,
+          {
+            context: 'planner',
+            type: 'external',
+            path: 'http://ext.menuEntry0.someContext1/'
+          } as ContextLink
+        ] as ContextLink[],
+        menus: [ ] as MenuItem[]
+      } as MenuItem,
       {
+        id: 'pipelines',
         name: 'Pipelines',
-        path: 'pipelines'
-      },
+        icon: '',
+        active: false,
+        contextLinks: [
+          {
+            context: 'platform',
+            type: 'internal',
+            path: ''
+          } as ContextLink,
+          {
+            context: 'planner',
+            type: 'external',
+            path: 'http://ext.menuEntry0.someContext1/'
+          } as ContextLink
+        ] as ContextLink[],
+        menus: [ ] as MenuItem[]
+      } as MenuItem,
       {
+        id: 'applications',
         name: 'Applications',
-        path: 'apps'
-      },
+        icon: '',
+        active: false,
+        contextLinks: [
+          {
+            context: 'platform',
+            type: 'internal',
+            path: ''
+          } as ContextLink,
+          {
+            context: 'planner',
+            type: 'external',
+            path: 'http://ext.menuEntry0.someContext1/'
+          } as ContextLink
+        ] as ContextLink[],
+        menus: [ ] as MenuItem[]
+      } as MenuItem,
       {
+        id: 'environments',
         name: 'Environments',
-        path: 'environments'
-      }
-    ];
+        icon: '',
+        active: false,
+        contextLinks: [
+          {
+            context: 'platform',
+            type: 'internal',
+            path: ''
+          } as ContextLink,
+          {
+            context: 'planner',
+            type: 'external',
+            path: 'http://ext.menuEntry0.someContext1/'
+          } as ContextLink
+        ] as ContextLink[],
+        menus: [ ] as MenuItem[]
+      } as MenuItem
+    ] as MenuItem[];
+
     if (displayDeployments) {
       menus.push({
-        name: 'Deployments',
-        path: 'deployments'
-      });
+          id: 'deployments',
+          name: 'Deployments',
+          icon: '',
+          active: false,
+          contextLinks: [
+            {
+              context: 'platform',
+              type: 'internal',
+              path: ''
+            } as ContextLink,
+            {
+              context: 'planner',
+              type: 'external',
+              path: 'http://ext.menuEntry0.someContext1/'
+            } as ContextLink
+          ] as ContextLink[],
+          menus: [ ] as MenuItem[]
+        } as MenuItem
+      );
     }
+
     return {
+      id: 'create',
       name: 'Create',
-      path: 'create',
-      menus: menus
-    };
+      icon: '',
+      active: true,
+      contextLinks: [
+        {
+          context: 'platform',
+          type: 'internal',
+          path: '/create'
+        } as ContextLink,
+        {
+          context: 'planner',
+          type: 'external',
+          path: 'http://ext.menuEntry0.someContext1/'
+        } as ContextLink
+      ] as ContextLink[],
+      menus: [ ] as MenuItem[]
+    } as MenuItem;
   }
 }
